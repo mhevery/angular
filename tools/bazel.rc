@@ -27,7 +27,7 @@ build --watchfs
 ###############################
 
 # Don't print all the .d.ts output locations after builds
-build --show_result=0
+# build --show_result=0
 
 # A more useful default output mode for bazel query
 # Prints eg. "ng_module rule //foo:bar" rather than just "//foo:bar"
