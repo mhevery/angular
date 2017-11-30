@@ -354,7 +354,7 @@ export class StaticReflector implements CompileReflector {
     return result;
   }
 
-  /** @internal */
+  /** @ FIXME internal */
   public simplify(context: StaticSymbol, value: any): any {
     const self = this;
     let scope = BindingScope.empty;

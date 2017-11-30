@@ -37,7 +37,7 @@ export class ApplicationInitStatus {
     });
   }
 
-  /** @internal */
+  /** @ FIXME internal */
   runInitializers() {
     if (this.initialized) {
       return;

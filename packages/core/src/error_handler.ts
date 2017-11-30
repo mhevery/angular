@@ -38,7 +38,7 @@ import {ERROR_ORIGINAL_ERROR, getDebugContext, getErrorLogger, getOriginalError}
  */
 export class ErrorHandler {
   /**
-   * @internal
+   * @ FIXME internal
    */
   _console: Console = console;
 

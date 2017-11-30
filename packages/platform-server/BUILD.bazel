@@ -3,39 +3,36 @@ package(default_visibility = ["//visibility:public"])
 load("@build_bazel_rules_typescript//:defs.bzl", "ts_library")
 
 ts_library(
-    name = "compiler",
+    name = "platform-server",
     srcs = glob(
         ["**/*.ts"],
         exclude = [
+            "integrationtest/**",
             "test/**",
             "testing/**",
         ],
     ),
-    module_name = "@angular/compiler",
+    module_name = "@angular/platform-server",
     tsconfig = ":tsconfig-build.json",
-)
-
-ts_library(
-    name = "test",
-    srcs = glob(["test/**/*.ts"]),
-    tsconfig = "//packages:tsconfig.json",
     deps = [
-        ":compiler",
-        ":testing",
-        "//packages:types",
-        "//packages/compiler-cli",
         "//packages/core",
-        "//packages/core:testing",
-        "//packages/platform-browser:testing",
+        "//packages/compiler",
+        "//packages/common",
+        "//packages/common/http",
+        "//packages/http",
+        "//packages/platform-browser",
         "//packages/platform-browser-dynamic",
+        "//packages/platform-browser-dynamic:testing",
+        "//packages/platform-browser/animations",
+        # "//packages:types"
     ],
 )
 
 ts_library(
     name = "testing",
     srcs = glob(["testing/**/*.ts"]),
-    module_name = "@angular/compiler/testing",
+    module_name = "@angular/platform-server/testing",
     module_root = "testing",
     tsconfig = ":tsconfig-build.json",
-    deps = [":compiler"],
+    deps = [":platform-server"],
 )

@@ -52,7 +52,7 @@ export class ReflectiveKey {
 }
 
 /**
- * @internal
+ * @ FIXME internal
  */
 export class KeyRegistry {
   private _allKeys = new Map<Object, ReflectiveKey>();
