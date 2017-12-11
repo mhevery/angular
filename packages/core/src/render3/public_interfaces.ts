@@ -6,8 +6,11 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import {Type} from '../core';
+import {RendererType2, Type} from '../core';
+import {resolveRendererType2} from '../view/util';
+
 import {diPublic, refreshComponent} from './instructions';
+
 
 
 /**
@@ -106,6 +109,13 @@ export interface ComponentDef<T> extends DirectiveDef<T> {
    * NOTE: only used with component directives.
    */
   template: ComponentTemplate<T>;
+
+  /**
+   * Renderer type data of the component.
+   *
+   * NOTE: only used with component directives.
+   */
+  rendererType: RendererType2|null;
 }
 
 export interface DirectiveDefArgs<T> {
@@ -123,6 +133,7 @@ export interface ComponentDefArgs<T> extends DirectiveDefArgs<T> {
   template: ComponentTemplate<T>;
   refresh?: (this: ComponentDef<T>, directiveIndex: number, elementIndex: number) => void;
   features?: ComponentDefFeature[];
+  rendererType?: RendererType2;
 }
 
 export type DirectiveDefFeature = <T>(directiveDef: DirectiveDef<T>) => void;
@@ -154,6 +165,7 @@ export function defineComponent<T>(componentDefinition: ComponentDefArgs<T>): Co
     inputs: invertObject(componentDefinition.inputs),
     outputs: invertObject(componentDefinition.outputs),
     methods: invertObject(componentDefinition.methods),
+    rendererType: resolveRendererType2(componentDefinition.rendererType) || null,
   };
   const feature = componentDefinition.features;
   feature && feature.forEach((fn) => fn(def));
