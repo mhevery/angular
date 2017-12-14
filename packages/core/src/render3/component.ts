@@ -7,12 +7,13 @@
  */
 
 import {ComponentRef, EmbeddedViewRef, Injector} from '../core';
+
 import {assertNotNull} from './assert';
-import {NG_HOST_SYMBOL, createError, createViewState, directiveCreate, elementHost, enterView, leaveView} from './instructions';
+import {NG_HOST_SYMBOL, createError, createViewState, directiveCreate, elementHostCreate, elementHostGet, enterView, leaveView, renderComponentOrTemplate} from './instructions';
 import {LElement} from './l_node';
 import {ComponentDef, ComponentType} from './public_interfaces';
-import {RElement, Renderer3, RendererFactory3} from './renderer';
-import {stringify, notImplemented} from './util';
+import {RElement, RendererFactory3, domRendererFactory3} from './renderer';
+import {notImplemented, stringify} from './util';
 
 
 
@@ -21,10 +22,8 @@ import {stringify, notImplemented} from './util';
  */
 export interface CreateComponentOptionArgs {
   /**
-   * Which renderer to use.
+   * Which renderer factory to use.
    */
-  renderer?: Renderer3;
-
   rendererFactory?: RendererFactory3;
 
   /**
@@ -137,14 +136,15 @@ export const NULL_INJECTOR: Injector = {
  */
 export function renderComponent<T>(
     componentType: ComponentType<T>, opts: CreateComponentOptionArgs = {}): T {
-  const renderer = opts.renderer || document;
+  const rendererFactory = opts.rendererFactory || domRendererFactory3;
   const componentDef = componentType.ngComponentDef;
   let component: T;
-  const oldView = enterView(createViewState(-1, renderer, []), null);
+  const hostNode = elementHostGet(rendererFactory, opts.host || componentDef.tag);
+  const oldView = enterView(
+      createViewState(-1, rendererFactory.createRenderer(hostNode, componentDef.rendererType), []),
+      null !);
   try {
-    // Create element node at index 0 in data array
-    elementHost(opts.host || componentDef.tag, componentDef);
-    // Create directive instance with n() and store at index 1 in data array (el is 0)
+    elementHostCreate(hostNode, componentDef);
     component = directiveCreate(1, componentDef.n(), componentDef);
   } finally {
     leaveView(oldView);
@@ -162,15 +162,8 @@ export function detectChanges<T>(component: T) {
     createError('Not a directive instance', component);
   }
   ngDevMode && assertNotNull(hostNode.data, 'hostNode.data');
-  const oldView = enterView(hostNode.view !, hostNode);
-  try {
-    // Element was stored at 0 and directive was stored at 1 in renderComponent
-    // so to refresh the component, r() needs to be called with (1, 0)
-    (component.constructor as ComponentType<T>).ngComponentDef.r(1, 0);
-    isDirty = false;
-  } finally {
-    leaveView(oldView);
-  }
+  renderComponentOrTemplate(hostNode, hostNode.view, component);
+  isDirty = false;
 }
 
 let isDirty = false;

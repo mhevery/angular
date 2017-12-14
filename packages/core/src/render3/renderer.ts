@@ -15,7 +15,7 @@
  * it will be easy to implement such API.
  */
 
-import {RendererStyleFlags2} from '../core';
+import {RendererStyleFlags2, RendererType2, ViewEncapsulation} from '../core';
 import {ComponentDef} from './public_interfaces';
 
 // TODO: cleanup once the code is merged in angular/angular
@@ -72,10 +72,15 @@ export interface Renderer3Fn {
 }
 
 export interface RendererFactory3 {
-  createRenderer(hostElement: RElement, componentDef: ComponentDef<any>): Renderer3;
+  createRenderer(hostElement: RElement|null, rendererType: RendererType2|null): Renderer3;
   begin?(): void;
   end?(): void;
 }
+
+export const domRendererFactory3: RendererFactory3 = {
+  createRenderer: (hostElement: RElement | null, rendererType: RendererType2 | null):
+                      Renderer3 => { return document;}
+};
 
 /**
  * Subset of API needed for appending elements and text nodes.
