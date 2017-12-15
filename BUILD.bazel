@@ -38,3 +38,15 @@ filegroup(
         "*.d.ts",
     ]]),
 )
+
+filegroup(
+    name = "web_test_bootstrap_scripts",
+    # do not sort
+    srcs = [
+        "//:node_modules/zone.js/dist/zone.min.js",
+        "//:node_modules/zone.js/dist/async-test.js",
+        "//:node_modules/zone.js/dist/sync-test.js",
+        "//:node_modules/zone.js/dist/proxy.min.js",
+        "//:node_modules/zone.js/dist/jasmine-patch.js",
+    ],
+)
