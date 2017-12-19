@@ -45,11 +45,12 @@ export {
 
   directive as D,
 
+  elementStart as E,
+  elementEnd as e,
+
   elementAttribute as a,
   elementClass as k,
-  elementEnd as e,
   elementProperty as p,
-  elementStart as E,
   elementStyle as s,
 
   lifecycle as l,
