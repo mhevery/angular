@@ -12,7 +12,6 @@ import {NO_CHANGE} from '../../src/render3/instructions';
 import {containerEl, renderToHtml} from './render_util';
 
 describe('iv integration test', () => {
-
   describe('render', () => {
 
     it('should render basic template', () => {
@@ -638,5 +637,4 @@ describe('iv integration test', () => {
     });
 
   });
-
 });
