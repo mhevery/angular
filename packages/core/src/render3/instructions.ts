@@ -8,17 +8,19 @@
 
 import './ng_dev_mode';
 
-import {ElementRef, TemplateRef, Type, ViewContainerRef} from '../core';
+import {ElementRef} from '../linker/element_ref';
+import {TemplateRef} from '../linker/template_ref';
+import {ViewContainerRef} from '../linker/view_container_ref';
+import {Type} from '../type';
 
 import {assertEqual, assertLessThan, assertNotEqual, assertNotNull} from './assert';
-import {ContainerState, CssSelector, ProjectionState, QueryReadType, QueryState, ViewState} from './interfaces';
-import {LContainer, LElement, LNode, LNodeFlags, LNodeInjector, LProjection, LText, LView} from './l_node';
+import {ContainerState, CssSelector, LContainer, LElement, LNode, LNodeFlags, LNodeInjector, LProjection, LText, LView, ProjectionState, QueryReadType, QueryState, ViewState} from './interfaces';
 
 import {NgStaticData, LNodeStatic, LContainerStatic, InitialInputData, InitialInputs, PropertyAliases, PropertyAliasValue,} from './l_node_static';
 import {assertNodeType} from './node_assert';
 import {appendChild, insertChild, insertView, processProjectedNode, removeView} from './node_manipulation';
 import {isNodeMatchingSelector} from './node_selector_matcher';
-import {ComponentDef, ComponentTemplate, ComponentType, DirectiveDef} from './public_interfaces';
+import {ComponentDef, ComponentTemplate, ComponentType, DirectiveDef} from './definition_interfaces';
 import {InjectFlags, diPublicInInjector, getOrCreateNodeInjectorForNode, getOrCreateElementRef, getOrCreateTemplateRef, getOrCreateContainerRef, getOrCreateInjectable} from './di';
 import {QueryList, QueryState_} from './query';
 import {RComment, RElement, RText, Renderer3, RendererFactory3, ProceduralRenderer3, ObjectOrientedRenderer3, RendererStyleFlags3} from './renderer';
@@ -1138,8 +1140,7 @@ export function viewEnd(): void {
 export const componentRefresh:
     <T>(directiveIndex: number, elementIndex: number, template: ComponentTemplate<T>) =>
         void = function<T>(
-            this: undefined | {template: ComponentTemplate<T>}, directiveIndex: number,
-            elementIndex: number, template: ComponentTemplate<T>) {
+            directiveIndex: number, elementIndex: number, template: ComponentTemplate<T>) {
   ngDevMode && assertDataInRange(elementIndex);
   const element = data ![elementIndex] as LElement;
   ngDevMode && assertNodeType(element, LNodeFlags.Element);
@@ -1150,7 +1151,7 @@ export const componentRefresh:
   const directive = data[directiveIndex];
   const oldView = enterView(hostView, element);
   try {
-    (template || this !.template)(directive, creationMode);
+    template(directive, creationMode);
   } finally {
     leaveView(oldView);
   }
