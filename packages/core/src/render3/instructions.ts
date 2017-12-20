@@ -82,7 +82,9 @@ let ngStaticData: NgStaticData;
 /**
  * State of the current view being processed.
  */
-let currentView: ViewState = createViewState(null !, null !, []);
+let currentView: ViewState = null !;
+
+currentView = createViewState(null !, null !, []);
 
 let currentQuery: QueryState|null;
 
