@@ -168,7 +168,7 @@ export function createViewState(
     parent: currentView,
     id: viewId,    // -1 for component views
     node: null !,  // until we initialize it in createNode.
-    data: null !,  // Hack use as a marker for creationMode
+    data: null !,
     ngStaticData: ngStaticData,
     cleanup: null,
     renderer: renderer,
