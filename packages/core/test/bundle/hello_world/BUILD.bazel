@@ -1,0 +1,26 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//tools:defaults.bzl", "ng_module")
+load("@build_bazel_rules_nodejs//:defs.bzl", "rollup_bundle")
+
+ng_module(
+    name = "hello_world",
+    srcs = glob(
+        [
+            "*.ts",
+            "src/**/*.ts",
+        ],
+    ),
+    deps = [
+        "//packages/core",
+    ],
+)
+
+rollup_bundle(
+    name = "hello_world_bundle",
+    entry_point = "packages/core/test/bundle/hello_world/index.js",
+    deps = [
+        ":hello_world",
+        "//packages/core",
+    ],
+)
