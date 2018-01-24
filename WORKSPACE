@@ -5,14 +5,13 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 git_repository(
     name = "build_bazel_rules_nodejs",
     remote = "https://github.com/bazelbuild/rules_nodejs.git",
-    commit = "c96acafb9df26e44ecc59268a5b3cc9ebafb1d87",
+    commit = "230d39a391226f51c03448f91eb61370e2e58c42",
 )
 
-load("@build_bazel_rules_nodejs//:defs.bzl", "check_bazel_version", "node_repositories", "nodejs_setup_workspace")
+load("@build_bazel_rules_nodejs//:defs.bzl", "check_bazel_version", "node_repositories")
 
 check_bazel_version("0.9.0")
 node_repositories(package_json = ["//:package.json"])
-nodejs_setup_workspace()
 
 git_repository(
     name = "build_bazel_rules_typescript",
