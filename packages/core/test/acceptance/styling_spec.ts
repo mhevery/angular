@@ -19,6 +19,67 @@ describe('styling', () => {
   beforeEach(ngDevModeResetPerfCounters);
 
   describe('apply in prioritization order', () => {
+
+    // KO - IMO this test should pass in ivy but it fails
+    fit('should prioritize template static class over host class bindings', () => {
+      @Component({template: `<div class="static" host-binding-dir></div>`})
+      class Cmp {
+      }
+
+      @Directive({selector: '[host-binding-dir]', host: {'[class.static]': 'null'}})
+      class Dir {
+      }
+
+      TestBed.configureTestingModule({declarations: [Cmp, Dir]});
+      const fixture = TestBed.createComponent(Cmp);
+      const div = fixture.nativeElement.querySelector('div');
+
+      fixture.detectChanges();
+      expect(getSortedClassName(div)).toEqual('static');
+    });
+
+    fit('should prioritize template class bindings over host class bindings', () => {
+      @Component({template: `<div [class.static]="true" host-binding-dir></div>`})
+      class Cmp {
+      }
+
+      @Directive({selector: '[host-binding-dir]', host: {'[class.static]': 'null'}})
+      class Dir {
+      }
+
+      TestBed.configureTestingModule({declarations: [Cmp, Dir]});
+      const fixture = TestBed.createComponent(Cmp);
+      const div = fixture.nativeElement.querySelector('div');
+
+      fixture.detectChanges();
+      expect(getSortedClassName(div)).toEqual('static');
+    });
+
+    fit('should prioritize template class bindings over host class bindings when the host binding changes',
+        () => {
+          @Component({template: `<div [class.static]="true" host-binding-dir></div>`})
+          class Cmp {
+          }
+
+          @Directive({selector: '[host-binding-dir]', host: {'[class.static]': 'exp'}})
+          class Dir {
+            exp = true;
+          }
+
+          TestBed.configureTestingModule({declarations: [Cmp, Dir]});
+          const fixture = TestBed.createComponent(Cmp);
+          const div = fixture.nativeElement.querySelector('div');
+
+          fixture.detectChanges();
+          expect(getSortedClassName(div)).toEqual('static');
+
+          const dirInstance = fixture.debugElement.query(By.directive(Dir)).injector.get(Dir);
+          dirInstance.exp = false;
+          fixture.detectChanges();
+          expect(getSortedClassName(div)).toEqual('static');
+        });
+
+
     onlyInIvy('style merging is ivy only feature').it('should perform static bindings', () => {
       @Component({template: `<div class="STATIC" style="color: blue"></div>`})
       class Cmp {
