@@ -20,6 +20,8 @@ const config = require('./commit-message.json');
 const FIXUP_PREFIX_RE = /^fixup! /i;
 const SQUASH_PREFIX_RE = /^squash! /i;
 const REVERT_PREFIX_RE = /^revert:? /i;
+// const LABS_INFIX_RE = /^(\w+\(\w+)\/labs(\): )/i;
+const LABS_INFIX_RE = /^^(\w+\()labs\/(\w+\): )/i;
 
 module.exports = (commitHeader, disallowSquash, nonFixupCommitHeaders) => {
   if (REVERT_PREFIX_RE.test(commitHeader)) {
@@ -56,7 +58,8 @@ module.exports = (commitHeader, disallowSquash, nonFixupCommitHeaders) => {
   if (!type) {
     const format = '<type>(<scope>): <subject>';
     error(
-        `The commit message header does not match the format of '${format}' or 'Revert: "${format}"'`,
+        `The commit message header does not match the format of '${format}' or 'Revert: "${
+            format}"'`,
         commitHeader);
     return false;
   }
@@ -87,7 +90,9 @@ function error(errorMessage, commitHeader) {
 function parseCommitHeader(header) {
   const isFixup = FIXUP_PREFIX_RE.test(header);
   const isSquash = SQUASH_PREFIX_RE.test(header);
-  header = header.replace(FIXUP_PREFIX_RE, '').replace(SQUASH_PREFIX_RE, '');
+  header = header.replace(FIXUP_PREFIX_RE, '')
+               .replace(SQUASH_PREFIX_RE, '')
+               .replace(LABS_INFIX_RE, function(match, before, after) { return before + after; });
 
   const match = /^(\w+)(?:\(([^)]+)\))?\: (.+)$/.exec(header) || [];
 
@@ -95,6 +100,8 @@ function parseCommitHeader(header) {
     header,
     type: match[1],
     scope: match[2],
-    subject: match[3], isFixup, isSquash,
+    subject: match[3],
+    isFixup,
+    isSquash,
   };
 }
