@@ -153,6 +153,9 @@
     "name": "NgModuleRef"
   },
   {
+    "name": "NgOnChangesFeatureImpl"
+  },
+  {
     "name": "NodeInjector"
   },
   {
@@ -189,6 +192,9 @@
     "name": "SANITIZER"
   },
   {
+    "name": "SIMPLE_CHANGES_STORE"
+  },
+  {
     "name": "SWITCH_ELEMENT_REF_FACTORY"
   },
   {
@@ -199,6 +205,9 @@
   },
   {
     "name": "SafeValueImpl"
+  },
+  {
+    "name": "SimpleChange"
   },
   {
     "name": "SkipSelf"
@@ -720,6 +729,9 @@
     "name": "getSelectedTNode"
   },
   {
+    "name": "getSimpleChangesStore"
+  },
+  {
     "name": "getSymbolIterator"
   },
   {
@@ -1011,6 +1023,9 @@
     "name": "nextNgElementId"
   },
   {
+    "name": "ngOnChangesSetInput"
+  },
+  {
     "name": "noSideEffects"
   },
   {
@@ -1143,6 +1158,9 @@
     "name": "setSelectedIndex"
   },
   {
+    "name": "setSimpleChangesStore"
+  },
+  {
     "name": "setTStylingRangeNext"
   },
   {
@@ -1225,6 +1243,9 @@
   },
   {
     "name": "wrapListener"
+  },
+  {
+    "name": "wrapOnChangesHook_inPreviousChangesStorage"
   },
   {
     "name": "writeDirectClass"

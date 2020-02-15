@@ -11,14 +11,6 @@ import {SimpleChange, SimpleChanges} from '../../interface/simple_change';
 import {EMPTY_OBJ} from '../empty';
 import {DirectiveDef, DirectiveDefFeature} from '../interfaces/definition';
 
-const PRIVATE_PREFIX = '__ngOnChanges_';
-
-type OnChangesExpando = OnChanges&{
-  __ngOnChanges_: SimpleChanges|null|undefined;
-  // tslint:disable-next-line:no-any Can hold any value
-  [key: string]: any;
-};
-
 /**
  * The NgOnChangesFeature decorates a component with support for the ngOnChanges
  * lifecycle hook, so it should be included in any component that implements
@@ -41,12 +33,15 @@ type OnChangesExpando = OnChanges&{
  *
  * @codeGenApi
  */
+export function ɵɵNgOnChangesFeature<T>(): DirectiveDefFeature {
+  return NgOnChangesFeatureImpl;
+}
 
-export function ɵɵNgOnChangesFeature<T>(definition: DirectiveDef<T>): void {
+export function NgOnChangesFeatureImpl<T>(definition: DirectiveDef<T>) {
   if (definition.type.prototype.ngOnChanges) {
     definition.setInput = ngOnChangesSetInput;
-    (definition as {onChanges: Function}).onChanges = wrapOnChanges();
   }
+  return wrapOnChangesHook_inPreviousChangesStorage;
 }
 
 // This option ensures that the ngOnChanges lifecycle hook will be inherited
@@ -55,27 +50,26 @@ export function ɵɵNgOnChangesFeature<T>(definition: DirectiveDef<T>): void {
 // tslint:disable-next-line:no-toplevel-property-access
 (ɵɵNgOnChangesFeature as DirectiveDefFeature).ngInherit = true;
 
-function wrapOnChanges() {
-  return function wrapOnChangesHook_inPreviousChangesStorage(this: OnChanges) {
-    const simpleChangesStore = getSimpleChangesStore(this);
-    const current = simpleChangesStore && simpleChangesStore.current;
+function wrapOnChangesHook_inPreviousChangesStorage(this: OnChanges) {
+  const simpleChangesStore = getSimpleChangesStore(this);
+  const current = simpleChangesStore && simpleChangesStore.current;
 
-    if (current) {
-      const previous = simpleChangesStore!.previous;
-      if (previous === EMPTY_OBJ) {
-        simpleChangesStore!.previous = current;
-      } else {
-        // New changes are copied to the previous store, so that we don't lose history for inputs
-        // which were not changed this time
-        for (let key in current) {
-          previous[key] = current[key];
-        }
+  if (current) {
+    const previous = simpleChangesStore!.previous;
+    if (previous === EMPTY_OBJ) {
+      simpleChangesStore!.previous = current;
+    } else {
+      // New changes are copied to the previous store, so that we don't lose history for inputs
+      // which were not changed this time
+      for (let key in current) {
+        previous[key] = current[key];
       }
-      simpleChangesStore!.current = null;
-      this.ngOnChanges(current);
     }
-  };
+    simpleChangesStore!.current = null;
+    this.ngOnChanges(current);
+  }
 }
+
 
 function ngOnChangesSetInput<T>(
     this: DirectiveDef<T>, instance: T, value: any, publicName: string, privateName: string): void {

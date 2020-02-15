@@ -10,6 +10,7 @@ import {CommonModule} from '@angular/common';
 import {ChangeDetectorRef, Component, ComponentFactoryResolver, ContentChildren, Directive, Input, NgModule, OnChanges, QueryList, SimpleChanges, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
 import {SimpleChange} from '@angular/core/src/core';
 import {TestBed} from '@angular/core/testing';
+import {expect} from '@angular/core/testing/src/testing_internal';
 import {By} from '@angular/platform-browser';
 import {onlyInIvy} from '@angular/private/testing';
 
@@ -1121,6 +1122,33 @@ describe('onChanges', () => {
     fixture.detectChanges();
 
     expect(events).toEqual([]);
+  });
+});
+
+describe('meta-programing', () => {
+  it('should allow adding lifecycle hook methods any time before bootstrap', () => {
+    const events: any[] = [];
+
+    @Component({template: `<child name="value"></child>`})
+    class App {
+    }
+
+    @Component({selector: 'child', template: `empty`})
+    class Child {
+      @Input() name: string = '';
+    }
+
+    (Child.prototype as any).ngOnInit = () => events.push('onInit');
+    (Child.prototype as any).ngOnChanges = (e: SimpleChanges) => events.push(e);
+
+    TestBed.configureTestingModule({
+      declarations: [App, Child],
+    });
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    expect(events.length).toEqual(2);
+    expect(events[0].name.currentValue).toEqual('value');
+    expect(events[1]).toEqual('onInit');
   });
 });
 
