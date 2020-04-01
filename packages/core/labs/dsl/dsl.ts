@@ -8,6 +8,7 @@
 
 import {PipeTransform, Type} from '@angular/core';
 
+// Is this stubbing the internal encoding you were talking about?
 export interface ElementDecorator<T> { __brand__: 'ElementModifier'; }
 
 export interface ContextFn<T> { (context: T): any; }
@@ -39,6 +40,9 @@ export interface PipeDSL<T> {
 
 export interface InterpolateDSL<T> { (...parts: (string|ContextFn<T>)[]): ContextFn<T>; }
 
+// If we're using DirectiveDSL to call components, how do we set the injector?
+// Eg I have a stepper form that needs to provide the step-level FormGroupDirective
+// to the form element components to get correct continue button behavior.
 export interface DirectiveDSL<T> { (directiveType: Type<any>): ElementDecorator<T>; }
 
 export interface ComponentDSL<T> {
@@ -54,5 +58,6 @@ export interface ComponentDSL<T> {
   directive: DirectiveDSL<T>;
 }
 
+// How do we call this componentType from a template? Do class properties become @Inputs?
 export function defineComponent<T>(
     componentType: Type<T>, declaration: (dsl: ComponentDSL<T>) => void): void {}
