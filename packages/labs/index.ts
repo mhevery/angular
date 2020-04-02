@@ -7,4 +7,4 @@
  */
 
 // NOTE: Please list exported API which are made public individually here.
-export {iWantToUseExperimentalAPIs} from './labs_disclaimer';
+export {assertExperimentalAgreement, iWantToUseExperimentalAPIs} from './labs_disclaimer';
