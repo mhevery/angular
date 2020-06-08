@@ -1126,7 +1126,7 @@ describe('onChanges', () => {
 });
 
 describe('meta-programing', () => {
-  it('should allow adding lifecycle hook methods any time before bootstrap', () => {
+  it('should allow adding lifecycle hook methods any time before first instance creation', () => {
     const events: any[] = [];
 
     @Component({template: `<child name="value"></child>`})

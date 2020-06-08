@@ -41,7 +41,7 @@ export function NgOnChangesFeatureImpl<T>(definition: DirectiveDef<T>) {
   if (definition.type.prototype.ngOnChanges) {
     definition.setInput = ngOnChangesSetInput;
   }
-  return wrapOnChangesHook_inPreviousChangesStorage;
+  return wrapOnChangesHook;
 }
 
 // This option ensures that the ngOnChanges lifecycle hook will be inherited
@@ -50,7 +50,16 @@ export function NgOnChangesFeatureImpl<T>(definition: DirectiveDef<T>) {
 // tslint:disable-next-line:no-toplevel-property-access
 (ɵɵNgOnChangesFeature as DirectiveDefFeature).ngInherit = true;
 
-function wrapOnChangesHook_inPreviousChangesStorage(this: OnChanges) {
+/**
+ * This is a synthetic lifecycle hook which gets inserted into `TView.preOrderHooks` to simulate
+ * `ngOnChanges`.
+ *
+ * The hooke reads the `NgSimpleChangesStore` data from the component instance and if changes are
+ * found it invokes `ngOnChanges` on the component instance.
+ *
+ * @param this Component instance.
+ */
+function wrapOnChangesHook(this: OnChanges) {
   const simpleChangesStore = getSimpleChangesStore(this);
   const current = simpleChangesStore && simpleChangesStore.current;
 
@@ -96,6 +105,10 @@ function setSimpleChangesStore(instance: any, store: NgSimpleChangesStore): NgSi
   return instance[SIMPLE_CHANGES_STORE] = store;
 }
 
+/**
+ * Data structure which is monkey-patched on the component instance and used by `ngOnChanges`
+ * life-cycle hook to track previous input values.
+ */
 interface NgSimpleChangesStore {
   previous: SimpleChanges;
   current: SimpleChanges|null;
