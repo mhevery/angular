@@ -6,13 +6,13 @@
  * found in the LICENSE file at https://angular.io/license
  */
 
-import {ApplicationRef, ComponentFactory, ComponentFactoryResolver, ComponentRef, EventEmitter, Injector, OnChanges, SimpleChange, SimpleChanges, Type} from '@angular/core';
-import {merge, Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
+import { ApplicationRef, ComponentFactory, ComponentFactoryResolver, ComponentRef, EventEmitter, Injector, NgZone, OnChanges, SimpleChange, SimpleChanges, Type } from '@angular/core';
+import { merge, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { NgElementStrategy, NgElementStrategyEvent, NgElementStrategyFactory } from './element-strategy';
+import { extractProjectableNodes } from './extract-projectable-nodes';
+import { isFunction, scheduler, strictEquals } from './utils';
 
-import {NgElementStrategy, NgElementStrategyEvent, NgElementStrategyFactory} from './element-strategy';
-import {extractProjectableNodes} from './extract-projectable-nodes';
-import {isFunction, scheduler, strictEquals} from './utils';
 
 /** Time in milliseconds to wait before destroying the component ref when disconnected. */
 const DESTROY_DELAY = 10;
@@ -71,6 +71,13 @@ export class ComponentNgElementStrategy implements NgElementStrategy {
    */
   private readonly unchangedInputs = new Set<string>();
 
+  /** Service for setting zone context. */
+  private readonly ngZone = this.injector.get<NgZone>(NgZone);
+
+  /** The zone the element was created in or `null` if Zone.js is not loaded. */
+  private readonly elementZone =
+      (typeof Zone === 'undefined') ? null : this.ngZone.run(() => Zone.current);
+
   constructor(private componentFactory: ComponentFactory<any>, private injector: Injector) {}
 
   /**
@@ -78,16 +85,19 @@ export class ComponentNgElementStrategy implements NgElementStrategy {
    * destruction.
    */
   connect(element: HTMLElement) {
-    // If the element is marked to be destroyed, cancel the task since the component was reconnected
-    if (this.scheduledDestroyFn !== null) {
-      this.scheduledDestroyFn();
-      this.scheduledDestroyFn = null;
-      return;
-    }
+    this.runInZone(() => {
+      // If the element is marked to be destroyed, cancel the task since the component was
+      // reconnected
+      if (this.scheduledDestroyFn !== null) {
+        this.scheduledDestroyFn();
+        this.scheduledDestroyFn = null;
+        return;
+      }
 
-    if (this.componentRef === null) {
-      this.initializeComponent(element);
-    }
+      if (this.componentRef === null) {
+        this.initializeComponent(element);
+      }
+    });
   }
 
   /**
@@ -95,19 +105,21 @@ export class ComponentNgElementStrategy implements NgElementStrategy {
    * being moved across the DOM.
    */
   disconnect() {
-    // Return if there is no componentRef or the component is already scheduled for destruction
-    if (this.componentRef === null || this.scheduledDestroyFn !== null) {
-      return;
-    }
-
-    // Schedule the component to be destroyed after a small timeout in case it is being
-    // moved elsewhere in the DOM
-    this.scheduledDestroyFn = scheduler.schedule(() => {
-      if (this.componentRef !== null) {
-        this.componentRef.destroy();
-        this.componentRef = null;
+    this.runInZone(() => {
+      // Return if there is no componentRef or the component is already scheduled for destruction
+      if (this.componentRef === null || this.scheduledDestroyFn !== null) {
+        return;
       }
-    }, DESTROY_DELAY);
+
+      // Schedule the component to be destroyed after a small timeout in case it is being
+      // moved elsewhere in the DOM
+      this.scheduledDestroyFn = scheduler.schedule(() => {
+        if (this.componentRef !== null) {
+          this.componentRef.destroy();
+          this.componentRef = null;
+        }
+      }, DESTROY_DELAY);
+    });
   }
 
   /**
@@ -115,11 +127,13 @@ export class ComponentNgElementStrategy implements NgElementStrategy {
    * retrieved from the cached initialization values.
    */
   getInputValue(property: string): any {
-    if (this.componentRef === null) {
-      return this.initialInputValues.get(property);
-    }
+    return this.runInZone(() => {
+      if (this.componentRef === null) {
+        return this.initialInputValues.get(property);
+      }
 
-    return this.componentRef.instance[property];
+      return this.componentRef.instance[property];
+    });
   }
 
   /**
@@ -127,22 +141,24 @@ export class ComponentNgElementStrategy implements NgElementStrategy {
    * cached and set when the component is created.
    */
   setInputValue(property: string, value: any): void {
-    if (this.componentRef === null) {
-      this.initialInputValues.set(property, value);
-      return;
-    }
+    this.runInZone(() => {
+      if (this.componentRef === null) {
+        this.initialInputValues.set(property, value);
+        return;
+      }
 
-    // Ignore the value if it is strictly equal to the current value, except if it is `undefined`
-    // and this is the first change to the value (because an explicit `undefined` _is_ strictly
-    // equal to not having a value set at all, but we still need to record this as a change).
-    if (strictEquals(value, this.getInputValue(property)) &&
-        !((value === undefined) && this.unchangedInputs.has(property))) {
-      return;
-    }
+      // Ignore the value if it is strictly equal to the current value, except if it is `undefined`
+      // and this is the first change to the value (because an explicit `undefined` _is_ strictly
+      // equal to not having a value set at all, but we still need to record this as a change).
+      if (strictEquals(value, this.getInputValue(property)) &&
+          !((value === undefined) && this.unchangedInputs.has(property))) {
+        return;
+      }
 
-    this.recordInputChange(property, value);
-    this.componentRef.instance[property] = value;
-    this.scheduleDetectChanges();
+      this.recordInputChange(property, value);
+      this.componentRef.instance[property] = value;
+      this.scheduleDetectChanges();
+    });
   }
 
   /**
@@ -260,5 +276,10 @@ export class ComponentNgElementStrategy implements NgElementStrategy {
 
     this.callNgOnChanges(this.componentRef);
     this.componentRef.changeDetectorRef.detectChanges();
+  }
+
+  /** Runs in the angular zone, if present. */
+  private runInZone(fn: () => unknown) {
+    return (this.elementZone && Zone.current !== this.elementZone) ? this.ngZone.run(fn) : fn();
   }
 }
